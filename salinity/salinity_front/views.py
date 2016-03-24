@@ -11,11 +11,15 @@ from salinity_front.models import CheckRedis
 import jsonpickle
 from time import time
 import threading
+import logging
 
+logger = logging.getLogger('django.salinity')
 server_con = CheckRedis("localhost")
 roles = {'app':['web', 'lb', 'php', 'app', 'util', 'queue', 'solr', 'es', 'nfs', 'sftp', 'rsyslog', 'mmonit'], 'ci': ['slave', 'ci', 'tarantula', 'awsutils']}
 no_stg = ['rsyslog', 'mmonit']
 envs = {'app':['qa', 'stg', 'prd'], 'ci':['ci']}
+# Bottle testing configuration. Replace above line with:
+# envs = {'app':['bottle'], 'ci':['bottle']}
 
 def update_redis():
     while(True):
@@ -44,6 +48,7 @@ def index(request):
     sorted_dict = collections.OrderedDict(sorted(context_dict.items()))
     try:
         saltyness = salted*100/((len(roles['app'])*3 + len(roles['ci']))-len(no_stg))
+        logger.info("Calculated Saltyness : {0}".format(saltyness))
     except ZeroDivisionError:
         saltyness = 0
 

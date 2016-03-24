@@ -94,3 +94,43 @@ TEMPLATE_DIRS = (
 STATICFILES_DIRS = (
     os.path.join(SITE_ROOT, 'static'),
 )
+
+LOGGING_PROD = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': '/opt/salinity/salinity.log',
+        }
+    },
+    'loggers': {
+        'django.salinity': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        }
+    }
+}
+
+LOGGING_TEST = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler'
+        }
+    },
+    'loggers': {
+        'django.salinity': {
+            'handlers': ['console'],
+            'level': 'INFO'
+        }
+    }
+}
+
+if os.path.exists('/opt/salinity'):
+    LOGGING = LOGGING_PROD
+else:
+    LOGGING = LOGGING_TEST

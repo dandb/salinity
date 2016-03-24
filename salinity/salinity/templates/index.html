@@ -54,14 +54,14 @@
 {% if forloop.first %}
 <table border=1 style="display: inline-block;">
 {% endif %}
-{% ifequal result.env 'ci' %}
+{% if result.env in ['ci', 'bottle'] %}
 <td>{{ role }} </style></td>
 <td style="color: Black; background-color: {{ result.status }}"><a href='/job/?role={{ role }}'>{{ result.status }}</a></td>
 </tr>
 {% if forloop.last %}
 </table>
 {% endif %}
-{% endifequal %}
+{% endif %}
 {% endfor %}
 
 </body>

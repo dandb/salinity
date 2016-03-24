@@ -7,11 +7,14 @@ import jsonpickle
 from time import time
 import subprocess
 import ast
+import logging
 
 class CheckRedis(object):
     """
     This class is where the redis connection and work happens.
     """
+    logger = logging.getLogger("django.salinity")
+
     def __init__(self, server):
         """
         Setup the server address and redis connection string
@@ -25,7 +28,7 @@ class CheckRedis(object):
         try:
             server_list = self.get_server_list(role,env)
         except Exception as e:
-            print "There was a problem, {}, using default server_list".format(e)
+            self.logger.error("There was a problem, {0}, using default server_list".format(e))
         try:
             for server in (server for server in server_list if server):
                 if self.check_failed_highstate(server, self.find_last_highstate(server)):
@@ -40,7 +43,7 @@ class CheckRedis(object):
         redis returns so that they can be checked individually.
         """
         serverList = ast.literal_eval(subprocess.check_output(["/usr/bin/sudo", "/opt/salinity/git/salinity/salinity_front/salt_client.py"]))
-        return [server for server,ip in serverList.iteritems() if role in server and env in server]
+        return [server for server,ip in serverList.iteritems() if ((role in server and env in server) or (env == "bottle"))]
     def find_last_highstate(self, server):
         """
         Check the server:state.highstate list entry for
@@ -58,7 +61,7 @@ class CheckRedis(object):
                 if not info['result']:
                     return True
         except Exception as e:
-            print "Problem with highstate return: {}".format(e)
+            self.logger.error("Problem with highstate return: {0}".format(e))
         return False
     def get_highstate(self, server, jid):
         return jsonpickle.decode(self.con.get(server + ":" + jid))
@@ -71,6 +74,7 @@ class CheckRedis(object):
             pass
         return context
     def write_context(self, context):
+        self.logger.info("Storing salinity information in redis: {0}".format(context))
         self.con.set("saved_context_dict", context)
     def update_redis_context(self, envs, roles, timestamp=0.0):
         try:
@@ -85,6 +89,6 @@ class CheckRedis(object):
                 for env in env_list:
                     for role in roles[env_type]:
                         context_dict[role + "_" + env] = {'status':self.check_failed_role(role, env), 'role':role, 'env':env}
-                        print context_dict[role + "_" + env]
+                        self.logger.debug(context_dict[role + "_" + env])
             redis_context = jsonpickle.encode(context_dict)
             self.write_context(redis_context)
