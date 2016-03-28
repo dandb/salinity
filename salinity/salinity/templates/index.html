@@ -54,7 +54,7 @@
 {% if forloop.first %}
 <table border=1 style="display: inline-block;">
 {% endif %}
-{% if result.env in ['ci', 'bottle'] %}
+{% if result.env == 'ci' or result.env == 'bottle' %}
 <td>{{ role }} </style></td>
 <td style="color: Black; background-color: {{ result.status }}"><a href='/job/?role={{ role }}'>{{ result.status }}</a></td>
 </tr>
